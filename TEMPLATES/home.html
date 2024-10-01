@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        
+         body {
+            background-image: url('/static/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #fcf3f3;
+            -webkit-text-stroke-width: 3px;
+            -webkit-text-stroke-color: black;
+            margin-top: 50px;
+            font-size: 3.5em;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        nav {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            width: 100%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        #nav_grid {
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+
+        .nav_section {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav_section a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.2em;
+            padding: 10px 20px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .nav_section a:hover {
+            background: #0066cc;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .container {
+            max-width: 800px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+
+        .container h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        .container p {
+            color: #666;
+            line-height: 1.6;
+            text-align: justify;
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            .nav_section a {
+                font-size: 1em;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+       
+    
+</head>
+
+<body>
+    <img src="background-image: url({{ url_for('static', filename='img/library_background.jpg') }})">
+    
+    <h1>BookWise: ISE Next-Gen Library Management</h1>
+    <nav id= "nav_grid">
+        <section class="nav_section">
+          <a  href="{{ url_for('add')}}" class="right">Add</a>
+          <a  href="{{ url_for('delete')}}" class="right">Delete</a>
+          <a  href="{{ url_for('issue')}}" class="right">Issue</a>
+          <a  href="{{ url_for('returnb')}}" class="right">Return</a>
+          <a  href="{{ url_for('search')}}" class="right">Search</a>
+        </section>
+    </nav>
+</body>
+</html>

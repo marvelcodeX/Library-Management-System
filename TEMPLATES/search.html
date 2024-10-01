@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Styled Form</title>
+    <style>
+        body {
+            background-image: url('/static/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        form {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 350px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], input[type="date"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-right: 10px;
+        }
+
+        input[type="date"] {
+            color: #333;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        input[type="date"]::-webkit-inner-spin-button,
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            display: none;
+        }
+
+        input[type="date"]::-webkit-clear-button {
+            display: none;
+        }
+
+        button {
+            padding: 12px;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        button:active {
+            background-color: #1e7e34;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        td {
+    background-color: white;
+    }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #333;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <img src="background-image: url({{ url_for('static', filename='img/library_background.jpg') }})">
+    <h1>Search Book</h1>
+    
+    <form action="{{ url_for('search_book')}}" method="post"> 
+        <label for="ac_no">Search by A/c No:</label>
+        <div class="input-group">
+            <input type="text" id="ac_no" name="ac_no">
+            <button type="submit">Search</button>
+        </div>
+        <br>
+
+        <label for="author">Search by Author:</label>
+        <div class="input-group">
+            <input type="text" id="author" name="author">
+            <button type="submit">Search</button>
+        </div>
+        <br>
+
+
+        <label for="sl_no">Search by SL.NO:</label>
+        <div class="input-group">
+            <input type="text" id="sl_no" name="sl_no">
+            <button type="submit">Search</button>
+        </div>
+        <br>
+        <!---<label for="title">Search by Title:</label>
+        <div class="input-group">
+            <input type="text" id="title" name="title">
+            <button type="submit">Search</button>
+        </div>
+        <br>--->
+        
+    </form>
+   
+
+{% if table %}
+    {{ table|safe }}
+{% endif %}
+
+
+</body>
+</html>
