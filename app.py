@@ -316,7 +316,7 @@ def search_book():
 
 if __name__ == '__main__': 
 	# Run the application on the local development server 
-    app.run(debug=True)
+    app.run(debug=True,host='0.0.0.0',port=8000)
 
 
 #test line ignore
