@@ -50,53 +50,67 @@ def use_database1(ac_no):
 
 
 
-def use_database2():
+def use_database2(ac_no):
     global mycursor
     global cnx
+    global data
+
+    # Establish the connection
     cnx = mysql.connector.connect(user='aastha', password='aastha1',
-                              host='localhost',
-                              database='LIBRARY')
+                                  host='localhost',
+                                  database='LIBRARY')
    
     mycursor = cnx.cursor()
 
-    sql = "INSERT INTO issue(`Student_Name`,`Reg_no`,`AC_No`, `Title`, `Author`,  `Issue_Date`) VALUES ( %s, %s, %s, %s, %s,%s)"
-    val=(data['sname'],data['reg_no'],data['ac_no'],data['title'],data['author'],data['date'])
-    #val = ("AAAAA", "22222","3333","MySubject")
-    mycursor.execute(sql, val)
+    # Update the book status to 'unavailable' and set return_date
+    sql_update = "UPDATE book SET issue_status = 'Unavailable', return_date = CURDATE() + INTERVAL 15 DAY WHERE `A/c No` = %s"
+    mycursor.execute(sql_update, (ac_no,))  # Execute the update query
 
-    cnx.commit()
-
-    print(mycursor.rowcount, "record inserted.")
-
-
-
-
-def use_database3():
-    global mycursor
-    global cnx
-    global var 
-    var="ac_no"
-    cnx = mysql.connector.connect(user='aastha', password='aastha1',
-                              host='localhost',
-                              database='LIBRARY')
-   
-    mycursor = cnx.cursor()
-
-    sql = "INSERT INTO returnb(`Student_Name`,`Reg_no`,`AC_No`, `Title`, `Author`,  `Return_Date`) VALUES ( %s, %s, %s, %s, %s,%s)"
-    val=(data['sname'],data['reg_no'],data['ac_no'],data['title'],data['author'],data['date'])
+    # Insert into issue table
+    sql_insert = "INSERT INTO issue(`Student_Name`,`Reg_no`,`AC_No`, `Title`, `Author`,  `Issue_Date`) VALUES ( %s, %s, %s, %s, %s, %s)"
+    val = (data['sname'], data['reg_no'], data['ac_no'], data['title'], data['author'], data['date'])
     
-    #val = ("AAAAA", "22222","3333","MySubject")
-    mycursor.execute(sql, val)
+    mycursor.execute(sql_insert, val)  # Execute the insert query
+    cnx.commit()  # Commit the transaction
+    print("Book issued successfully.")
 
-    sql="DELETE FROM issue WHERE `AC_No` = %s "
-    val = (data['ac_no'],) #create a global variable and put it in here
-    #change the table name from submit to return
-    #Put name of student as input in issue and submit
 
-    mycursor.execute(sql, val)
+
+
+
+
+def use_database3(ac_no):
+    global mycursor
+    global cnx
+    global data
+
+    # Establish the connection
+    cnx = mysql.connector.connect(user='aastha', password='aastha1',
+                                  host='localhost',
+                                  database='LIBRARY')
+   
+    mycursor = cnx.cursor()
+
+    # Update the book status to 'Available' where A/c No matches
+    sql_update = "UPDATE book SET issue_status = 'Available', return_date = NULL WHERE `A/c No` = %s"
+    mycursor.execute(sql_update, (ac_no,))  # Pass the ac_no to the query
+
+    #Insert into returnb table (assuming data contains all necessary fields)
+    sql_insert = "INSERT INTO returnb(`Student_Name`,`Reg_no`,`AC_No`, `Title`, `Author`,  `Return_Date`) VALUES (%s, %s, %s, %s, %s, %s)"
+    val = (data['sname'], data['reg_no'], data['ac_no'], data['title'], data['author'], data['date'])
+
+    mycursor.execute(sql_insert, val)  # Execute the insert query
+
+    
+    sql_delete = "DELETE FROM issue WHERE `AC_No` = %s"
+    val = (ac_no,) 
+    mycursor.execute(sql_delete, val)
+
+    # Commit the changes to the database
     cnx.commit()
 
     print(mycursor.rowcount, "record inserted.")
+
 
 
 
@@ -260,16 +274,15 @@ def issue():
 
 @app.route('/issue_book', methods=['POST']) 
 def issue_book(): 
-    
-   
     global data
-    data=request.form 
+    ac_no = request.form.get('ac_no')
+    data=request.form
+    
+    if ac_no:
+        use_database2(ac_no,)
+        print(f"Book issued with account number: {ac_no}")
 
-    use_database2()
-    ## Return the extracted information 
-    print ( "Issue book")
     return render_template('home.html')
-
 
 
 
@@ -283,8 +296,9 @@ def return_book():
     
    
     global data
+    ac_no = request.form.get('ac_no')
     data=request.form 
-    use_database3()
+    use_database3(ac_no)
     ## Return the extracted information 
     print ( "return book")
     return render_template('home.html')
