@@ -63,7 +63,7 @@ def use_database2(ac_no):
     mycursor = cnx.cursor()
 
     # Update the book status to 'unavailable' and set return_date
-    sql_update = "UPDATE book SET issue_status = 'Unavailable', return_date = CURDATE() + INTERVAL 15 DAY WHERE `A/c No` = %s"
+    sql_update = "UPDATE book SET Issue_status = 'Unavailable', return_date = CURDATE() + INTERVAL 15 DAY WHERE `A/c No` = %s"
     mycursor.execute(sql_update, (ac_no,))  # Execute the update query
 
     # Insert into issue table
@@ -92,7 +92,7 @@ def use_database3(ac_no):
     mycursor = cnx.cursor()
 
     # Update the book status to 'Available' where A/c No matches
-    sql_update = "UPDATE book SET issue_status = 'Available', return_date = NULL WHERE `A/c No` = %s"
+    sql_update = "UPDATE book SET Issue_status = 'Available', return_date = NULL WHERE `A/c No` = %s"
     mycursor.execute(sql_update, (ac_no,))  # Pass the ac_no to the query
 
     #Insert into returnb table (assuming data contains all necessary fields)
@@ -152,6 +152,7 @@ def use_database4(data):
     html += "<th style='padding: 10px;'>Author</th>\n"
     html += "<th style='padding: 10px;'>Edition/Year</th>\n"
     html += "<th style='padding: 10px;'>Publication</th>\n"
+    html += "<th style='padding: 10px;'>Issue_status</th>\n"
     html += "</tr>\n" 
     
     if result:
@@ -163,6 +164,7 @@ def use_database4(data):
             html += "<td style='padding: 10px;'>{}</td>\n".format(row['Author'])
             html += "<td style='padding: 10px;'>{}</td>\n".format(row['Edition/Year'])
             html += "<td style='padding: 10px;'>{}</td>\n".format(row['Publication'])
+            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Issue_status'])
             html += "</tr>\n"
         html += "</table>"
     else:
@@ -204,6 +206,7 @@ def use_database5(data):
     html += "<th style='padding: 10px;'>Author</th>\n"
     html += "<th style='padding: 10px;'>Edition/Year</th>\n"
     html += "<th style='padding: 10px;'>Publication</th>\n"
+    html += "<th style='padding: 10px;'>Issue_status</th>\n"
     html += "</tr>\n" 
     
     if result:
@@ -215,6 +218,7 @@ def use_database5(data):
             html += "<td style='padding: 10px;'>{}</td>\n".format(row['Author'])
             html += "<td style='padding: 10px;'>{}</td>\n".format(row['Edition/Year'])
             html += "<td style='padding: 10px;'>{}</td>\n".format(row['Publication'])
+            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Issue_status'])
             html += "</tr>\n"
         html += "</table>"
     else:
@@ -320,9 +324,9 @@ def search_book():
         table_html = use_database4(data)
 
     # Render search.html with the table_html content
-    return render_template('search.html', table=table_html)
-
-
+        return render_template('search.html', table=table_html)
+    
+   
 
 
 

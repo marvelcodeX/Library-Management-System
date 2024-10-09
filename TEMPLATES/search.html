@@ -116,6 +116,26 @@
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+        #homeButton {
+            width: 20%;
+            padding: 10px;
+            background-color: #28a745;
+            border: 3px;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2em;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #homeButton:hover {
+            background-color: #089141;
+        }
+        
+        #homeButton:active {
+            background-color: #089141;
+        }
     </style>
 </head>
 <body>
@@ -145,15 +165,12 @@
             <button type="submit">Search</button>
         </div>
         <br>
-        <!---<label for="title">Search by Title:</label>
-        <div class="input-group">
-            <input type="text" id="title" name="title">
-            <button type="submit">Search</button>
-        </div>
-        <br>--->
+        
         
     </form>
-   
+    <button id="homeButton" onclick="goHome()">Return to Home Page</button>
+
+    
 
 {% if table %}
     {{ table|safe }}
