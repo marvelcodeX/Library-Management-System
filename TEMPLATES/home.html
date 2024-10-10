@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        
-         body {
+        body {
             background-image: url('/static/background.jpg');
             background-size: cover;
             background-position: center;
@@ -63,24 +62,36 @@
         .container {
             max-width: 800px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.9);
+            background:#0066cc;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             border-radius: 10px;
             margin-top: 30px;
         }
 
-        .container h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 2em;
+        .flash-message {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            color: #fff;
             text-align: center;
         }
 
-        .container p {
-            color: #666;
-            line-height: 1.6;
-            text-align: justify;
+        .flash-message.warning {
+            background-color: #ffcc00; /* Yellow for warning */
         }
+
+        .flash-message.info {
+            background-color: #007bff; /* Blue for info */
+        }
+
+        .flash-message.success {
+            background-color: #28a745; /* Green for success */
+        }
+
+        .flash-message.error {
+            background-color: #dc3545; /* Red for error */
+        }
+
         @media (max-width: 600px) {
             h1 {
                 font-size: 2em;
@@ -91,22 +102,31 @@
             }
         }
     </style>
-       
-    
 </head>
-
 <body>
-    <img src="background-image: url({{ url_for('static', filename='img/library_background.jpg') }})">
-    
     <h1>BookWise: ISE Next-Gen Library Management</h1>
+     <!-- Display flash messages -->
+     {% with messages = get_flashed_messages(with_categories=true) %}
+     {% if messages %}
+         <div class="container">
+             {% for category, message in messages %}
+                 <div class="flash-message {{ category }}">{{ message }}</div>
+             {% endfor %}
+         </div>
+     {% endif %}
+     {% endwith %}
+
     <nav id= "nav_grid">
         <section class="nav_section">
-          <a  href="{{ url_for('add')}}" class="right">Add</a>
-          <a  href="{{ url_for('delete')}}" class="right">Delete</a>
-          <a  href="{{ url_for('issue')}}" class="right">Issue</a>
-          <a  href="{{ url_for('returnb')}}" class="right">Return</a>
-          <a  href="{{ url_for('search')}}" class="right">Search</a>
+          <a href="{{ url_for('add')}}" class="right">Add</a>
+          <a href="{{ url_for('delete')}}" class="right">Delete</a>
+          <a href="{{ url_for('issue')}}" class="right">Issue</a>
+          <a href="{{ url_for('returnb')}}" class="right">Return</a>
+          <a href="{{ url_for('search')}}" class="right">Search</a>
         </section>
     </nav>
+
+   
+
 </body>
 </html>

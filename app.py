@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request,flash,redirect,url_for
 import mysql.connector
 from mysql.connector import Error
+
  #Importing required functions 
 
 import mysql.connector
@@ -63,7 +64,7 @@ def use_database2(ac_no):
     mycursor = cnx.cursor()
 
     # Update the book status to 'unavailable' and set return_date
-    sql_update = "UPDATE book SET Issue_status = 'Unavailable', return_date = CURDATE() + INTERVAL 15 DAY WHERE `A/c No` = %s"
+    sql_update = "UPDATE book SET Issue_status = 'Unavailable', return_date = CURDATE() + INTERVAL 1 DAY WHERE `A/c No` = %s"
     mycursor.execute(sql_update, (ac_no,))  # Execute the update query
 
     # Insert into issue table
@@ -110,6 +111,33 @@ def use_database3(ac_no):
     cnx.commit()
 
     print(mycursor.rowcount, "record inserted.")
+
+
+def check_return_date():
+    try:
+        cnx = mysql.connector.connect(user='aastha', password='aastha1',
+                                      host='localhost', database='LIBRARY')
+        cursor = cnx.cursor(dictionary=True)
+
+        # Query for books that are due tomorrow
+        query = """
+        SELECT Title, return_date
+        FROM issue
+        WHERE return_date = CURDATE() + INTERVAL 1 DAY
+        """
+        cursor.execute(query)
+        books_due_tomorrow = cursor.fetchall()
+
+        cursor.close()
+        cnx.close()
+
+        # Return the list of books due tomorrow
+        return books_due_tomorrow
+
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return []
+
 
 
 
@@ -229,7 +257,11 @@ def use_database5(data):
 
 
 
+
 app = Flask(__name__)
+
+# Set the secret key
+app.secret_key = 'aastha12'
 
 @app.route('/')
 def index():
@@ -286,7 +318,7 @@ def issue_book():
         use_database2(ac_no,)
         print(f"Book issued with account number: {ac_no}")
 
-    return render_template('home.html')
+    return redirect(url_for('home'))
 
 
 
@@ -306,6 +338,21 @@ def return_book():
     ## Return the extracted information 
     print ( "return book")
     return render_template('home.html')
+
+
+@app.route('/')
+def home():
+    # Check if there are books due for return tomorrow
+    books_due = check_return_date()
+
+    if books_due:
+        for book in books_due:
+            flash(f"Reminder: '{book['Title']}' is due tomorrow ({book['return_date']})", "warning")
+    else:
+        flash("No books due for return tomorrow.", "info")
+
+    return redirect(url_for('home'))  # Render the home page with flash messages
+
 
 
 @app.route('/search')
