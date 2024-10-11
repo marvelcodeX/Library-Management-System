@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        /* Your existing CSS styles here */
         body {
             background-image: url('/static/background.jpg');
             background-size: cover;
@@ -25,6 +26,32 @@
             margin-top: 50px;
             font-size: 3.5em;
             text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .message-container {
+            max-width: 800px;
+            padding: 20px;
+            background: #0066cc;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            margin-top: 30px;
+            color: white;
+            text-align: center;
+        }
+
+        /* Add styles for flash messages */
+        .flash-message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .flash-message.success {
+            background-color: #28a745; /* Green for success */
+        }
+        
+        .flash-message.info {
+            background-color: #007bff; /* Blue for info */
         }
 
         nav {
@@ -59,39 +86,6 @@
             border-radius: 5px;
         }
 
-        .container {
-            max-width: 800px;
-            padding: 20px;
-            background:#0066cc;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 10px;
-            margin-top: 30px;
-        }
-
-        .flash-message {
-            padding: 10px;
-            margin: 10px;
-            border-radius: 5px;
-            color: #fff;
-            text-align: center;
-        }
-
-        .flash-message.warning {
-            background-color: #ffcc00; /* Yellow for warning */
-        }
-
-        .flash-message.info {
-            background-color: #007bff; /* Blue for info */
-        }
-
-        .flash-message.success {
-            background-color: #28a745; /* Green for success */
-        }
-
-        .flash-message.error {
-            background-color: #dc3545; /* Red for error */
-        }
-
         @media (max-width: 600px) {
             h1 {
                 font-size: 2em;
@@ -105,28 +99,61 @@
 </head>
 <body>
     <h1>BookWise: ISE Next-Gen Library Management</h1>
-     <!-- Display flash messages -->
-     {% with messages = get_flashed_messages(with_categories=true) %}
-     {% if messages %}
-         <div class="container">
-             {% for category, message in messages %}
-                 <div class="flash-message {{ category }}">{{ message }}</div>
-             {% endfor %}
-         </div>
-     {% endif %}
-     {% endwith %}
 
-    <nav id= "nav_grid">
+    <div class="message-container" id="message-container">
+        <!-- Messages about due books will be inserted here -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="flash-message success">{{ message }}</div>
+            {% endfor %}
+        {% else %}
+            <div class="flash-message info">No books are due for return tomorrow.</div>
+        {% endif %}
+    </div>
+
+    <nav id="nav_grid">
         <section class="nav_section">
-          <a href="{{ url_for('add')}}" class="right">Add</a>
-          <a href="{{ url_for('delete')}}" class="right">Delete</a>
-          <a href="{{ url_for('issue')}}" class="right">Issue</a>
-          <a href="{{ url_for('returnb')}}" class="right">Return</a>
-          <a href="{{ url_for('search')}}" class="right">Search</a>
+            <a href="{{ url_for('add')}}" class="right">Add</a>
+            <a href="{{ url_for('delete')}}" class="right">Delete</a>
+            <a href="{{ url_for('issue')}}" class="right">Issue</a>
+            <a href="{{ url_for('returnb')}}" class="right">Return</a>
+            <a href="{{ url_for('search')}}" class="right">Search</a>
         </section>
     </nav>
 
-   
+    <!-- JavaScript to handle fetching books due for tomorrow -->
+    <script>
+        // Fetch data from the Flask route when the page loads
+       // Fetch data from the Flask route when the page loads
+window.onload = function() {
+    fetch('/check_books_due')
+        .then(response => response.json())  // Parse the response as JSON
+        .then(data => {
+            const messageContainer = document.getElementById('message-container');
+            // Clear any previous messages
+            messageContainer.innerHTML = '';
 
+            // Handle the JSON data received from Flask
+            if (data.books_due.length > 0) {
+                // If there are books due, create messages and append to the container
+                data.books_due.forEach(book => {
+                    const message = document.createElement('div');
+                    message.className = 'flash-message success'; // You can change the class based on your needs
+                    message.textContent = `Reminder: The book '${book.Title}' has not been returned by '${book.Student_Name}'.`;
+                    messageContainer.appendChild(message);
+                });
+            } else {
+                const noDueBooksMessage = document.createElement('div');
+                noDueBooksMessage.className = 'flash-message info';
+                noDueBooksMessage.textContent = "No books are due for return tomorrow.";
+                messageContainer.appendChild(noDueBooksMessage);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching books due data:', error);
+        });
+};
+
+    </script>
 </body>
 </html>

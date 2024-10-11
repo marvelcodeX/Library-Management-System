@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request,flash,redirect,url_for
+from flask import Flask, render_template, request,flash,redirect,url_for,jsonify
 import mysql.connector
 from mysql.connector import Error
 
@@ -68,7 +68,7 @@ def use_database2(ac_no):
     mycursor.execute(sql_update, (ac_no,))  # Execute the update query
 
     # Insert into issue table
-    sql_insert = "INSERT INTO issue(`Student_Name`,`Reg_no`,`AC_No`, `Title`, `Author`,  `Issue_Date`) VALUES ( %s, %s, %s, %s, %s, %s)"
+    sql_insert = "INSERT INTO issue(`Student_Name`,`Reg_no`,`AC_No`, `Title`, `Author`,  `Issue_Date`,`Return_Date`) VALUES ( %s, %s, %s, %s, %s, %s,CURDATE() + INTERVAL 1 DAY)"
     val = (data['sname'], data['reg_no'], data['ac_no'], data['title'], data['author'], data['date'])
     
     mycursor.execute(sql_insert, val)  # Execute the insert query
@@ -112,31 +112,33 @@ def use_database3(ac_no):
 
     print(mycursor.rowcount, "record inserted.")
 
-
 def check_return_date():
+    global mycursor
     try:
-        cnx = mysql.connector.connect(user='aastha', password='aastha1',
-                                      host='localhost', database='LIBRARY')
-        cursor = cnx.cursor(dictionary=True)
+        cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
+        mycursor = cnx.cursor(dictionary=True)
 
         # Query for books that are due tomorrow
         query = """
-        SELECT Title, return_date
+        SELECT Title, Student_Name, return_date
         FROM issue
         WHERE return_date = CURDATE() + INTERVAL 1 DAY
         """
-        cursor.execute(query)
-        books_due_tomorrow = cursor.fetchall()
+        mycursor.execute(query)
+        books_due_tomorrow = mycursor.fetchall()
+        
+        print("Books due tomorrow fetched from database:", books_due_tomorrow)  # Debugging output
 
-        cursor.close()
+        mycursor.close()
         cnx.close()
 
-        # Return the list of books due tomorrow
-        return books_due_tomorrow
+        return books_due_tomorrow  # Always return a list, even if empty
 
     except mysql.connector.Error as err:
         print(f"Error: {err}")
-        return []
+        return []  # Return an empty list to avoid undefined issues
+
+
 
 
 
@@ -342,16 +344,35 @@ def return_book():
 
 @app.route('/')
 def home():
-    # Check if there are books due for return tomorrow
-    books_due = check_return_date()
+    books_due = check_return_date()  # This should return a list
+    messages = []
+
+    print("Books due from check_return_date:", books_due)  # Debugging output
 
     if books_due:
         for book in books_due:
-            flash(f"Reminder: '{book['Title']}' is due tomorrow ({book['return_date']})", "warning")
+            messages.append(f"Reminder: The book '{book['Title']}' has not been returned by '{book['Student_Name']}' and is due tomorrow ({book['return_date']}).")
     else:
-        flash("No books due for return tomorrow.", "info")
+        messages.append("No books are due for return tomorrow.")
 
-    return redirect(url_for('home'))  # Render the home page with flash messages
+    print("Messages before rendering:", messages)  # Debugging output
+    return render_template('home.html', messages=messages)  # Render the template
+
+@app.route('/check_books_due')
+def check_books_due():
+    books_due = check_return_date()  # Your function to get due books
+    if not books_due:
+        return jsonify(books_due=[])
+
+    return jsonify(books_due=books_due)
+
+
+
+
+
+
+
+
 
 
 
