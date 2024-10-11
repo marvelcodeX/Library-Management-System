@@ -2,7 +2,7 @@ from flask import Flask, render_template, request,flash,redirect,url_for,jsonify
 import mysql.connector
 from mysql.connector import Error
 
- #Importing required functions 
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -61,15 +61,11 @@ def use_database2(ac_no):
     global data
 
     # Establish the connection
-<<<<<<< HEAD
     cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
 
-=======
     cnx = mysql.connector.connect(user='aastha', password='aastha1',
                                   host='localhost',
                                   database='LIBRARY')
-   
->>>>>>> f768a63da53ea506cfe30dec0d1fcbed81ea5836
     mycursor = cnx.cursor()
 
     # Update the book status to 'unavailable' and set return_date
@@ -95,15 +91,11 @@ def use_database3(ac_no):
     global data
 
     # Establish the connection
-<<<<<<< HEAD
     cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
-
-=======
     cnx = mysql.connector.connect(user='aastha', password='aastha1',
                                   host='localhost',
                                   database='LIBRARY')
-   
->>>>>>> f768a63da53ea506cfe30dec0d1fcbed81ea5836
+
     mycursor = cnx.cursor()
 
     # Update the book status to 'Available' where A/c No matches
@@ -130,10 +122,7 @@ def check_return_date():
     global mycursor
     try:
         cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
-<<<<<<< HEAD
 
-=======
->>>>>>> f768a63da53ea506cfe30dec0d1fcbed81ea5836
         mycursor = cnx.cursor(dictionary=True)
 
         # Query for books that are due tomorrow
@@ -223,16 +212,13 @@ def use_database5(data):
     result = None
     try:
         # Connect to the database
-<<<<<<< HEAD
         cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
-=======
         cnx = mysql.connector.connect(
             user='aastha',
             password='aastha1',
             host='localhost',
             database='LIBRARY'
         )
->>>>>>> f768a63da53ea506cfe30dec0d1fcbed81ea5836
         mycursor = cnx.cursor(dictionary=True)
 
         if 'ac_no' in data and data['ac_no']:
@@ -282,17 +268,9 @@ def use_database5(data):
 
 
 
-<<<<<<< HEAD
-=======
-
-
 
 app = Flask(__name__)
 
-# Set the secret key
-app.secret_key = 'aastha12'
-
->>>>>>> f768a63da53ea506cfe30dec0d1fcbed81ea5836
 @app.route('/')
 def login():
     return render_template('login.html')
@@ -449,12 +427,10 @@ def s_home():
 
 
 if __name__ == '__main__': 
-	# Run the application on the local development server 
-<<<<<<< HEAD
-    app.run(debug=True,host='0.0.0.0',port=8000)
-=======
+
     app.run(debug=True,host='0.0.0.0',port=8000)
 
+  
 
-#test line ignore
->>>>>>> f768a63da53ea506cfe30dec0d1fcbed81ea5836
+
+
