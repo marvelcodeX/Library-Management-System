@@ -100,6 +100,16 @@
 <body>
     <h1>BookWise: ISE Next-Gen Library Management</h1>
 
+    <nav id="nav_grid">
+        <section class="nav_section">
+            <a href="{{ url_for('add')}}" class="right">Add</a>
+            <a href="{{ url_for('delete')}}" class="right">Delete</a>
+            <a href="{{ url_for('issue')}}" class="right">Issue</a>
+            <a href="{{ url_for('returnb')}}" class="right">Return</a>
+            <a href="{{ url_for('search')}}" class="right">Search</a>
+        </section>
+    </nav>
+
     <div class="message-container" id="message-container">
         <!-- Messages about due books will be inserted here -->
         {% if messages %}
@@ -110,16 +120,6 @@
             <div class="flash-message info">No books are due for return tomorrow.</div>
         {% endif %}
     </div>
-
-    <nav id="nav_grid">
-        <section class="nav_section">
-            <a href="{{ url_for('add')}}" class="right">Add</a>
-            <a href="{{ url_for('delete')}}" class="right">Delete</a>
-            <a href="{{ url_for('issue')}}" class="right">Issue</a>
-            <a href="{{ url_for('returnb')}}" class="right">Return</a>
-            <a href="{{ url_for('search')}}" class="right">Search</a>
-        </section>
-    </nav>
 
     <!-- JavaScript to handle fetching books due for tomorrow -->
     <script>

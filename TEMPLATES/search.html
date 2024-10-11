@@ -129,14 +129,19 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-        #homeButton:hover {
-            background-color: #089141;
-        }
+#homeButton:hover {
+    background-color: #089141;
+}
         
-        #homeButton:active {
-            background-color: #089141;
-        }
+#homeButton:active {
+    background-color: #089141;
+}
     </style>
+    <script>
+        function goHome() {
+            window.location.href = "{{ url_for('home') }}";  // Redirect to the home page
+        }
+    </script>
 </head>
 <body>
 

@@ -64,11 +64,11 @@ def use_database2(ac_no):
     mycursor = cnx.cursor()
 
     # Update the book status to 'unavailable' and set return_date
-    sql_update = "UPDATE book SET Issue_status = 'Unavailable', return_date = CURDATE() + INTERVAL 1 DAY WHERE `A/c No` = %s"
+    sql_update = "UPDATE book SET Issue_status = 'Unavailable', return_date = CURDATE() + INTERVAL 15 DAY WHERE `A/c No` = %s"
     mycursor.execute(sql_update, (ac_no,))  # Execute the update query
 
     # Insert into issue table
-    sql_insert = "INSERT INTO issue(`Student_Name`,`Reg_no`,`AC_No`, `Title`, `Author`,  `Issue_Date`,`Return_Date`) VALUES ( %s, %s, %s, %s, %s, %s,CURDATE() + INTERVAL 1 DAY)"
+    sql_insert = "INSERT INTO issue(`Student_Name`,`Reg_no`,`AC_No`, `Title`, `Author`,  `Issue_Date`,`Return_Date`) VALUES ( %s, %s, %s, %s, %s, %s,CURDATE() + INTERVAL 15 DAY)"
     val = (data['sname'], data['reg_no'], data['ac_no'], data['title'], data['author'], data['date'])
     
     mycursor.execute(sql_insert, val)  # Execute the insert query
@@ -204,27 +204,33 @@ def use_database4(data):
 
     
 def use_database5(data):
-    global mycursor
-    global cnx
-    
-    cnx = mysql.connector.connect(
-        user='aastha', 
-        password='aastha1',
-        host='localhost',
-        database='LIBRARY'
-    )
-    mycursor = cnx.cursor(dictionary=True)
+    import mysql.connector  # Ensure you have the mysql.connector import
 
     result = None
+    try:
+        # Connect to the database
+        cnx = mysql.connector.connect(
+            user='aastha',
+            password='aastha1',
+            host='localhost',
+            database='LIBRARY'
+        )
+        mycursor = cnx.cursor(dictionary=True)
 
-    if 'ac_no' in data and data['ac_no']:
-        sql = "SELECT * FROM book WHERE `A/c No` = %s"
-        val = (data['ac_no'],)
-        mycursor.execute(sql, val)
-        result = mycursor.fetchall()
+        if 'ac_no' in data and data['ac_no']:
+            sql = "SELECT * FROM book WHERE `A/c No` = %s"
+            val = (data['ac_no'],)
+            mycursor.execute(sql, val)
+            result = mycursor.fetchall()
 
-    mycursor.close()
-    cnx.close()
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")  # Print any database errors
+    finally:
+        # Close the cursor and connection
+        if mycursor:
+            mycursor.close()
+        if cnx:
+            cnx.close()
 
     # Generate HTML
     html = "<div style='margin-bottom: 100px;'></div>"
@@ -255,6 +261,7 @@ def use_database5(data):
         html += "<p>No results found.</p>"
 
     return html
+
 
 
 
@@ -383,17 +390,19 @@ def search():
 @app.route('/search_book', methods=['POST'])
 def search_book():
     global data
-    data = request.form
+    data = request.form  # Get the form data submitted by the user
 
     # Determine which function to call based on the input fields
-    if 'ac_no' in data and data['ac_no']:
-        table_html = use_database5(data)
+    if 'ac_no' in data and data['ac_no']:  # Check if 'ac_no' exists and is not empty
+        table_html = use_database5(data)  # Call the function for valid account number
     else:
-        table_html = use_database4(data)
+        table_html = use_database4(data)  # Call the alternative function
 
     # Render search.html with the table_html content
-        return render_template('search.html', table=table_html)
-    
+    return render_template('search.html', table=table_html)
+@app.route('/')
+def s_home():
+    return render_template('home.html') 
    
 
 
