@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            background-image: url('/static/background33.png');
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 400px;
+            margin: 0 auto;
+            margin-top: 90px;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            align-items: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .btn-group {
+            margin: 40px 0;
+            margin-left: 10px;
+        }
+
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px 20px;
+            margin: 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 150px;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .admin-btn {
+            background-color: #007BFF;
+        }
+
+        .admin-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .user-btn {
+            background-color: #28a745;
+        }
+
+        .user-btn:hover {
+            background-color: #218838;
+        }
+
+        .icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        /* Admin Login Form Styling */
+        .form-popup {
+            display: none;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ccc;
+            padding: 50px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            width: 320px; /* Set width of the pop-up form here */
+            height: 330px;
+            -shadow: 0 5px 15px rgba(0,0,0,0.2);
+            
+        }
+
+        .form-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input[type=text], input[type=password] {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+        }
+
+        .submit-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            border: none;
+            cursor: pointer;
+            margin: 5px 0;
+            width: 20px;  /* Full width inside form */
+            font-size: 6px;  /* Adjust font size */
+        }
+
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+        }
+
+        .cancel-btn {
+            background-color: #f44336;
+            color: white;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            cursor: pointer;
+            width: 5px;  
+            
+            font-size: 16px;  
+        }
+
+        .cancel-btn:hover {
+            background-color: #e53935;
+        }
+
+        .submit-btn, .cancel-btn {
+            padding: 15px 20px;  /* Increase padding for button size */
+            width: 100px;  /* Make buttons wider */
+            font-size: 15px;  /* Adjust the text size */
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <div class="btn-group">
+            <!-- Admin Button -->
+            <button class="btn admin-btn" onclick="document.getElementById('admin-form').style.display='block'">
+                <span class="icon">👔</span> Admin
+            </button>
+
+            <!-- User Button -->
+            <button class="btn user-btn" onclick="window.location.href='/user'">
+                <span class="icon">👤</span> User
+            </button>
+        </div>
+
+        <div id="admin-form" class="form-popup">
+            <form action="/admin" method="post" class="form-container">
+                <h2>Admin Login</h2>
+                <label for="username"><b>Username</b></label>
+                <input type="text" placeholder="Enter Username" name="username" required>
+    
+                <label for="password"><b>Password</b></label>
+                <input type="password" placeholder="Enter Password" name="password" required>
+    
+                <button type="submit" class="submit-btn">Login</button>
+                <button type="button" class="cancel-btn" onclick="document.getElementById('admin-form').style.display='none'">Close</button>
+            </form>
+            {% if message %}
+                <p class="error">{{ message }}</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
