@@ -7,14 +7,14 @@ from mysql.connector import Error
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 admin_credentials = {
-    'admin': 'pass'  # Change to your desired username and password
+    'admin': 'pass'  # Change to username and password
 }
 
 import mysql.connector
 def use_database():
     global mycursor
     global cnx
-    cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
+    cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
 
    
     mycursor = cnx.cursor()
@@ -36,7 +36,7 @@ def use_database():
 def use_database1(ac_no):
     global mycursor
     global cnx
-    cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
+    cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
 
    
     mycursor = cnx.cursor()
@@ -61,7 +61,7 @@ def use_database2(ac_no):
     global data
 
     # Establish the connection
-    cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
+    cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
 
     cnx = mysql.connector.connect(user='aastha', password='aastha1',
                                   host='localhost',
@@ -91,7 +91,7 @@ def use_database3(ac_no):
     global data
 
     # Establish the connection
-    cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
+    cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
     cnx = mysql.connector.connect(user='aastha', password='aastha1',
                                   host='localhost',
                                   database='LIBRARY')
@@ -121,7 +121,7 @@ def use_database3(ac_no):
 def check_return_date():
     global mycursor
     try:
-        cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
+        cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
 
         mycursor = cnx.cursor(dictionary=True)
 
@@ -271,7 +271,7 @@ def use_database5(data):
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route('/login')
 def login():
     return render_template('login.html')
 
