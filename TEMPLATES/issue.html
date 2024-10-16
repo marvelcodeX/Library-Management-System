@@ -148,7 +148,7 @@
 </head>
 <body>
 
-    <img src="background-image: url({{ url_for('static', filename='img/library_background.jpg') }})">
+    
     <h1>Issue A Book</h1>
 
     <div id="myModal" class="modal">
@@ -159,13 +159,13 @@
     </div>
     <form id="issueBookForm" action="{{ url_for('issue_book')}}" method="post"> 
         
-        <label for="sname">Name of student:</label>
+        <label for="sname">Name of Borrower :</label>
         <input type="text" id="sname" name="sname" required>
         <br>
-        <label for="reg_no">Student Reg. No</label>
+        <label for="reg_no">Reg. No:</label>
         <input type="text" id="reg_no" name="reg_no" required>
         <br>
-        <label for="ac_no">A/c No.</label>
+        <label for="ac_no">Acc.No</label>
         <input type="text" id="ac_no" name="ac_no" required>
         <br>
         <label for="title">Title:</label>
@@ -174,17 +174,24 @@
         <label for="author">Author:</label>
         <input type="text" id="author" name="author" required>
         <br>
-        <label for="date">Date:</label>
-        <input type="date" id="date" name="date" required>
-        <br>
+        
         <button type="submit" id="issueBookBtn">Issue Book</button>
     </form>
     <button id="homeButton" onclick="goHome()">Return to Home Page</button>
 
     <script>
         function goHome() {
-    window.location.href = '/';
+    window.location.href = '/home';
     }
+
+
+
+    // Function to set the current date as the default value for the issue date field
+    document.addEventListener("DOMContentLoaded", function() {
+        const issueDateInput = document.getElementById("issue_date");
+        const today = new Date().toISOString().split('T')[0]; // Format the date to YYYY-MM-DD
+        issueDateInput.value = today; // Set the input's value to today's date
+    });
         // Get the modal
         var modal = document.getElementById("myModal");
     

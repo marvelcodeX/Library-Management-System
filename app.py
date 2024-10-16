@@ -1,13 +1,16 @@
 from flask import Flask, render_template, request,flash,redirect,url_for,jsonify
 import mysql.connector
 from mysql.connector import Error
+from datetime import datetime, timedelta
+import secrets
+
 
 
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = secrets.token_hex(16)
 admin_credentials = {
-    'admin': 'pass'  # Change to username and password
+    'admin': 'pass'  # Change to your desired username and password
 }
 
 import mysql.connector
@@ -38,6 +41,7 @@ def use_database1(ac_no):
     global cnx
     cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
 
+
    
     mycursor = cnx.cursor()
 
@@ -55,30 +59,37 @@ def use_database1(ac_no):
 
 
 
-def use_database2(ac_no):
-    global mycursor
-    global cnx
-    global data
 
-    # Establish the connection
-    cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
+def use_database2(ac_no, data):
+    try:
+        # Establish the connection
+        cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
+        mycursor = cnx.cursor()
 
-    cnx = mysql.connector.connect(user='aastha', password='aastha1',
-                                  host='localhost',
-                                  database='LIBRARY')
-    mycursor = cnx.cursor()
+        # Get current date for Issue Date and Return Date
+        current_date = datetime.now()  # Get the current date
+        return_date = current_date + timedelta(days=1)  # Calculate return date
 
-    # Update the book status to 'unavailable' and set return_date
-    sql_update = "UPDATE book SET Issue_status = 'Unavailable', return_date = CURDATE() + INTERVAL 15 DAY WHERE `A/c No` = %s"
-    mycursor.execute(sql_update, (ac_no,))  # Execute the update query
+        # Update the book status to 'unavailable' and set return_date
+        sql_update = "UPDATE book SET issue_status = 'Unavailable', return_date = %s WHERE `A/c No` = %s"
+        mycursor.execute(sql_update, (return_date, ac_no))  # Execute the update query
 
-    # Insert into issue table
-    sql_insert = "INSERT INTO issue(`Student_Name`,`Reg_no`,`AC_No`, `Title`, `Author`,  `Issue_Date`,`Return_Date`) VALUES ( %s, %s, %s, %s, %s, %s,CURDATE() + INTERVAL 15 DAY)"
-    val = (data['sname'], data['reg_no'], data['ac_no'], data['title'], data['author'], data['date'])
-    
-    mycursor.execute(sql_insert, val)  # Execute the insert query
-    cnx.commit()  # Commit the transaction
-    print("Book issued successfully.")
+        # Prepare data for insertion
+        sql_insert = "INSERT INTO issue(`Student_Name`, `Reg_no`, `AC_No`, `Title`, `Author`, `Issue_Date`) VALUES (%s, %s, %s, %s, %s, %s)"
+        val = (data['sname'], data['reg_no'], ac_no, data['title'], data['author'], current_date.strftime('%Y-%m-%d'), return_date.strftime('%Y-%m-%d'))
+        
+        mycursor.execute(sql_insert, val)  # Execute the insert query
+        cnx.commit()  # Commit the transaction
+
+        print("Book issued successfully.")
+    except mysql.connector.Error as db_error:
+        print(f"Database error: {db_error}")  # Handle database errors
+        raise  # Raise the exception to be caught in the route
+    finally:
+        if mycursor:
+            mycursor.close()  # Close the cursor
+        if cnx:
+            cnx.close()  # Close the database connection
 
 
 
@@ -92,14 +103,20 @@ def use_database3(ac_no):
 
     # Establish the connection
     cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
-    cnx = mysql.connector.connect(user='aastha', password='aastha1',
-                                  host='localhost',
-                                  database='LIBRARY')
+
 
     mycursor = cnx.cursor()
+    sql_check = "SELECT * FROM issue WHERE `AC_No` = %s"
+    mycursor.execute(sql_check, (ac_no,))
+    issue_record = mycursor.fetchone()
+
+    # If no record found, the book has not been issued
+    if not issue_record:
+        print("This book has not been issued, so it cannot be returned.")
+        return
 
     # Update the book status to 'Available' where A/c No matches
-    sql_update = "UPDATE book SET Issue_status = 'Available', return_date = NULL WHERE `A/c No` = %s"
+    sql_update = "UPDATE book SET issue_status = 'Available', return_date = NULL WHERE `A/c No` = %s"
     mycursor.execute(sql_update, (ac_no,))  # Pass the ac_no to the query
 
     #Insert into returnb table (assuming data contains all necessary fields)
@@ -155,7 +172,7 @@ def use_database4(data):
     global mycursor
     global cnx
     
-    cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
+    cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
 
     mycursor = cnx.cursor(dictionary=True)
 
@@ -212,13 +229,7 @@ def use_database5(data):
     result = None
     try:
         # Connect to the database
-        cnx = mysql.connector.connect(user='aastha', password='aastha1', host='localhost', database='LIBRARY')
-        cnx = mysql.connector.connect(
-            user='aastha',
-            password='aastha1',
-            host='localhost',
-            database='LIBRARY'
-        )
+        cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
         mycursor = cnx.cursor(dictionary=True)
 
         if 'ac_no' in data and data['ac_no']:
@@ -269,9 +280,9 @@ def use_database5(data):
 
 
 
-app = Flask(__name__)
 
-@app.route('/login')
+
+@app.route('/')
 def login():
     return render_template('login.html')
 
@@ -329,22 +340,24 @@ def delete_book():
 	
         print(f"Book name: {ac_no}")
     return render_template('home.html')
-
 @app.route('/issue')
 def issue():
     return render_template('issue.html')
 
 @app.route('/issue_book', methods=['POST']) 
 def issue_book(): 
-    global data
-    ac_no = request.form.get('ac_no')
-    data=request.form
+    ac_no = request.form.get('ac_no')  # Get account number from form
+    data = request.form  # Get the form data
     
     if ac_no:
-        use_database2(ac_no,)
-        print(f"Book issued with account number: {ac_no}")
+        try:
+            use_database2(ac_no, data)  # Call function to update database
+            flash("Book issued successfully.", "success")  # Flash success message
+        except Exception as e:
+            flash(f"An error occurred: {str(e)}", "error")  # Flash error message
 
     return redirect(url_for('home'))
+
 
 
 
@@ -417,7 +430,7 @@ def search_book():
 
     # Render search.html with the table_html content
     return render_template('search.html', table=table_html)
-@app.route('/')
+@app.route('/home')
 def s_home():
     return render_template('home.html') 
    

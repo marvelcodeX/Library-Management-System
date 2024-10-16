@@ -162,13 +162,13 @@
     </div>
 
     <form id="returnBookForm" action="{{ url_for('return_book')}}" method="post"> 
-        <label for="sname">Name of student:</label>
+        <label for="sname">Name of Returner:</label>
         <input type="text" id="sname" name="sname" required>
         <br>
-        <label for="reg_no">Student Reg. No</label>
+        <label for="reg_no">Reg. No:</label>
         <input type="text" id="reg_no" name="reg_no" required>
         <br>
-        <label for="ac_no">A/c No.</label>
+        <label for="ac_no">Acc.No:</label>
         <input type="text" id="ac_no" name="ac_no" required>
         <br>
         <label for="title">Title:</label>
@@ -187,7 +187,7 @@
     <!-- JavaScript for Modal -->
     <script>
         function goHome() {
-    window.location.href = '/';
+    window.location.href = '/home';
     }
     // Get the modal
     var modal = document.getElementById("myModal");
@@ -225,5 +225,3 @@
 
 </body>
 </html>
-
-    
