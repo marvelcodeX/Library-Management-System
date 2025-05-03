@@ -17,7 +17,7 @@ import mysql.connector
 def use_database():
     global mycursor
     global cnx
-    cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
+    cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
 
    
     mycursor = cnx.cursor()
@@ -39,7 +39,7 @@ def use_database():
 def use_database1(ac_no):
     global mycursor
     global cnx
-    cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
+    cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
 
 
    
@@ -63,7 +63,7 @@ def use_database1(ac_no):
 def use_database2(ac_no, data):
     try:
         # Establish the connection
-        cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
+        cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
         mycursor = cnx.cursor()
 
         # Get current date for Issue Date and Return Date
@@ -102,7 +102,7 @@ def use_database3(ac_no):
     global data
 
     # Establish the connection
-    cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
+	cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
 
 
     mycursor = cnx.cursor()
@@ -138,7 +138,7 @@ def use_database3(ac_no):
 def check_return_date():
     global mycursor
     try:
-        cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
+        cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
 
         mycursor = cnx.cursor(dictionary=True)
 
@@ -172,7 +172,7 @@ def use_database4(data):
     global mycursor
     global cnx
     
-    cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
+    cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
 
     mycursor = cnx.cursor(dictionary=True)
 
@@ -229,7 +229,7 @@ def use_database5(data):
     result = None
     try:
         # Connect to the database
-        cnx = mysql.connector.connect(user='root', password='blabla21', host='localhost', database='libdb')
+        cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
         mycursor = cnx.cursor(dictionary=True)
 
         if 'ac_no' in data and data['ac_no']:
