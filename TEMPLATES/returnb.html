@@ -1,227 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Return Book</title>
-    <style>
-        body {
-            background-image: url('/static/background.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+{% extends "base.html" %}
 
-        h1 {
-            font-size: 3em;
-            margin-bottom: 20px;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-        }
+{% block title %}Return Book | BookWise Library{% endblock %}
 
-        form {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 350px;
-            text-align: left;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        input[type="text"], input[type="date"] {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1em;
-        }
-
-        input[type="date"] {
-            color: #333;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 1em;
-            cursor: pointer;
-        }
-
-        input[type="date"]::-webkit-inner-spin-button,
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            display: none;
-        }
-
-        input[type="date"]::-webkit-clear-button {
-            display: none;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #28a745;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            font-size: 1.2em;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #218838;
-        }
-
-        button:active {
-            background-color: #1e7e34;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto; /* 15% from the top and centered */
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%; /* Could be more or less, depending on screen size */
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        #homeButton {
-        width: 20%;
-        padding: 10px;
-        background-color: #28a745;
-        border: 3px;
-        border-radius: 10px;
-        color: white;
-        font-size: 1.2em;
-        margin-top: 10px;
-        margin-bottom: 20px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-
-#homeButton:hover {
-    background-color: #089141;
-}
-
-#homeButton:active {
-    background-color: #089141;
-}
-    </style>
-</head>
-<body>
-
-    <img src="background-image: url({{ url_for('static', filename='img/library_background.jpg') }})">
-    <h1>Return a Book</h1>
-   
-    <!-- Add Modal -->
-    <div id="myModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <p>Book successfully returned!</p>
-        </div>
+{% block content %}
+<section class="form-wrap">
+    <div>
+        <p class="lede">Returns desk</p>
+        <h1 class="page-title">Close an issue.</h1>
+        <p class="lede">
+            Return by accession number. The app finds the active issue record,
+            saves it to return history, and marks the book available again.
+        </p>
     </div>
 
-    <form id="returnBookForm" action="{{ url_for('return_book')}}" method="post"> 
-        <label for="sname">Name of Returner:</label>
-        <input type="text" id="sname" name="sname" required>
-        <br>
-        <label for="reg_no">Reg. No:</label>
-        <input type="text" id="reg_no" name="reg_no" required>
-        <br>
-        <label for="ac_no">Acc.No:</label>
-        <input type="text" id="ac_no" name="ac_no" required>
-        <br>
-        <label for="title">Title:</label>
-        <input type="text" id="title" name="title" required>
-        <br>
-        <label for="author">Author:</label>
-        <input type="text" id="author" name="author" required>
-        <br>
-        <label for="date">Date:</label>
-        <input type="date" id="date" name="date" required>
-        <br>
-        <button type="submit" id="returnBookBtn">Return Book</button>
+    <form class="form-card" action="{{ url_for('return_book') }}" method="post">
+        <h2>Return details</h2>
+        <div class="field">
+            <label for="ac_no">Accession No</label>
+            <input type="text" id="ac_no" name="ac_no" required>
+        </div>
+
+        <div class="button-row">
+            <button class="btn" type="submit">Return book</button>
+            <a class="btn btn-secondary" href="{{ url_for('home') }}">Back to dashboard</a>
+        </div>
     </form>
-
-    <button id="homeButton" onclick="goHome()">Return to Home Page</button>
-    <!-- JavaScript for Modal -->
-    <script>
-        function goHome() {
-    window.location.href = '/home';
-    }
-    // Get the modal
-    var modal = document.getElementById("myModal");
-
-    // Get the button that opens the modal
-    var btn = document.getElementById("returnBookBtn");
-
-    // Get the <span> element that closes the modal
-    var span = document.getElementsByClassName("close")[0];
-
-    // When the user clicks on the button, open the modal and set a timer to close it
-    btn.onclick = function(event) {
-        event.preventDefault(); // Prevent form submission
-        modal.style.display = "block";
-        setTimeout(function() {
-            modal.style.display = "none";
-            document.getElementById("returnBookForm").submit(); // Submit the form after the modal closes
-        }, 3000); // 3000 milliseconds = 3 seconds
-    }
-
-    // When the user clicks on <span> (x), close the modal
-    span.onclick = function() {
-        modal.style.display = "none";
-        document.getElementById("returnBookForm").submit(); // Submit the form
-    }
-
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-            document.getElementById("returnBookForm").submit(); // Submit the form
-        }
-    }
-    </script>
-
-</body>
-</html>
+</section>
+{% endblock %}

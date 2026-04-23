@@ -1,449 +1,462 @@
-from flask import Flask, render_template, request,flash,redirect,url_for,jsonify
-import mysql.connector
-from mysql.connector import Error
-from datetime import datetime, timedelta
+import os
 import secrets
+from contextlib import contextmanager
+from datetime import datetime, timedelta
+from functools import wraps
+
+from flask import (
+    Flask,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+
+try:
+    import mysql.connector
+    from mysql.connector import Error
+except ImportError:
+    mysql = None
+    Error = Exception
 
 
+app = Flask(
+    __name__,
+    template_folder="TEMPLATES",
+    static_folder="STATIC",
+    static_url_path="/static",
+)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", secrets.token_hex(32))
 
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "pass")
+LOAN_DAYS = int(os.getenv("LOAN_DAYS", "14"))
 
-app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)
-admin_credentials = {
-    'admin': 'pass'  # Change to your desired username and password
+DB_CONFIG = {
+    "user": os.getenv("DB_USER", "root"),
+    "password": os.getenv("DB_PASSWORD", "pwd"),
+    "host": os.getenv("DB_HOST", "localhost"),
+    "database": os.getenv("DB_NAME", "db_name"),
 }
 
-import mysql.connector
-def use_database():
-    global mycursor
-    global cnx
-    cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
 
-   
-    mycursor = cnx.cursor()
+@contextmanager
+def db_cursor(dictionary=False):
+    if mysql is None:
+        raise RuntimeError(
+            "mysql-connector-python is not installed. Run: pip install -r requirements.txt"
+        )
 
-    sql = "INSERT INTO book (`SL.NO`, `A/c No`, `Title`, `Author`, `Edition/Year`, `Publication`) VALUES (%s, %s, %s, %s, %s, %s)"
-    val = (data['sl_no'], data['ac_no'], data['title'], data['author'], data['edition'], data['publication'])
-
-    #val = ("AAAAA", "22222","3333","MySubject")
-    mycursor.execute(sql, val)
-
-    cnx.commit()
-
-    print(mycursor.rowcount, "record inserted.")
-
-
-
-
-
-def use_database1(ac_no):
-    global mycursor
-    global cnx
-    cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
-
-
-   
-    mycursor = cnx.cursor()
-
-    sql = "DELETE FROM book WHERE `A/C No` = %s "
-    val = (ac_no,)
-
-    mycursor.execute(sql, val)
-
-    cnx.commit()
-
-    print(mycursor.rowcount, "record deleted.")
-
-
-
-
-
-
-
-def use_database2(ac_no, data):
+    cnx = mysql.connector.connect(**DB_CONFIG)
+    cursor = cnx.cursor(dictionary=dictionary)
     try:
-        # Establish the connection
-        cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
-        mycursor = cnx.cursor()
-
-        # Get current date for Issue Date and Return Date
-        current_date = datetime.now()  # Get the current date
-        return_date = current_date + timedelta(days=1)  # Calculate return date
-
-        # Update the book status to 'unavailable' and set return_date
-        sql_update = "UPDATE book SET issue_status = 'Unavailable', return_date = %s WHERE `A/c No` = %s"
-        mycursor.execute(sql_update, (return_date, ac_no))  # Execute the update query
-
-        # Prepare data for insertion
-        sql_insert = "INSERT INTO issue(`Student_Name`, `Reg_no`, `AC_No`, `Title`, `Author`, `Issue_Date`) VALUES (%s, %s, %s, %s, %s, %s)"
-        val = (data['sname'], data['reg_no'], ac_no, data['title'], data['author'], current_date.strftime('%Y-%m-%d'), return_date.strftime('%Y-%m-%d'))
-        
-        mycursor.execute(sql_insert, val)  # Execute the insert query
-        cnx.commit()  # Commit the transaction
-
-        print("Book issued successfully.")
-    except mysql.connector.Error as db_error:
-        print(f"Database error: {db_error}")  # Handle database errors
-        raise  # Raise the exception to be caught in the route
+        yield cursor
+        cnx.commit()
+    except Exception:
+        cnx.rollback()
+        raise
     finally:
-        if mycursor:
-            mycursor.close()  # Close the cursor
-        if cnx:
-            cnx.close()  # Close the database connection
-
-
-
-
-
-
-def use_database3(ac_no):
-    global mycursor
-    global cnx
-    global data
-
-    # Establish the connection
-	cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
-
-
-    mycursor = cnx.cursor()
-    sql_check = "SELECT * FROM issue WHERE `AC_No` = %s"
-    mycursor.execute(sql_check, (ac_no,))
-    issue_record = mycursor.fetchone()
-
-    # If no record found, the book has not been issued
-    if not issue_record:
-        print("This book has not been issued, so it cannot be returned.")
-        return
-
-    # Update the book status to 'Available' where A/c No matches
-    sql_update = "UPDATE book SET issue_status = 'Available', return_date = NULL WHERE `A/c No` = %s"
-    mycursor.execute(sql_update, (ac_no,))  # Pass the ac_no to the query
-
-    #Insert into returnb table (assuming data contains all necessary fields)
-    sql_insert = "INSERT INTO returnb(`Student_Name`,`Reg_no`,`AC_No`, `Title`, `Author`,  `Return_Date`) VALUES (%s, %s, %s, %s, %s, %s)"
-    val = (data['sname'], data['reg_no'], data['ac_no'], data['title'], data['author'], data['date'])
-
-    mycursor.execute(sql_insert, val)  # Execute the insert query
-
-    
-    sql_delete = "DELETE FROM issue WHERE `AC_No` = %s"
-    val = (ac_no,) 
-    mycursor.execute(sql_delete, val)
-
-    # Commit the changes to the database
-    cnx.commit()
-
-    print(mycursor.rowcount, "record inserted.")
-
-def check_return_date():
-    global mycursor
-    try:
-        cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
-
-        mycursor = cnx.cursor(dictionary=True)
-
-        # Query for books that are due tomorrow
-        query = """
-        SELECT Title, Student_Name, return_date
-        FROM issue
-        WHERE return_date = CURDATE() + INTERVAL 1 DAY
-        """
-        mycursor.execute(query)
-        books_due_tomorrow = mycursor.fetchall()
-        
-        print("Books due tomorrow fetched from database:", books_due_tomorrow)  # Debugging output
-
-        mycursor.close()
+        cursor.close()
         cnx.close()
 
-        return books_due_tomorrow  # Always return a list, even if empty
 
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-        return []  # Return an empty list to avoid undefined issues
+def admin_required(view):
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        if not session.get("is_admin"):
+            flash("Please log in as admin to continue.", "warning")
+            return redirect(url_for("login"))
+        return view(*args, **kwargs)
 
-
-
-
-
-
-
-def use_database4(data):
-    global mycursor
-    global cnx
-    
-    cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
-
-    mycursor = cnx.cursor(dictionary=True)
-
-    result = None
-
-    if 'sl_no' in data and data['sl_no']:
-        sql = "SELECT * FROM book WHERE `SL.NO` = %s"
-        val = (data['sl_no'],)
-        mycursor.execute(sql, val)
-        result = mycursor.fetchall()
-    elif 'author' in data and data['author']:
-        sql = "SELECT * FROM book WHERE `Author` LIKE %s"
-        val = ('%' + data['author'] + '%',)
-        mycursor.execute(sql, val)
-        result = mycursor.fetchall()
-
-    mycursor.close()
-    cnx.close()
-
-    # Generate HTML
-    html = "<div style='margin-bottom: 100px;'></div>"
-    html += "<table style='border-collapse: collapse; width: 70%;'>\n" 
-    html += "<tr style='background-color: #333; color: white;'>\n" 
-    html += "<th style='padding: 10px;'>SL.NO</th>\n"
-    html += "<th style='padding: 10px;'>A/c No</th>\n" 
-    html += "<th style='padding: 10px;'>Title</th>\n" 
-    html += "<th style='padding: 10px;'>Author</th>\n"
-    html += "<th style='padding: 10px;'>Edition/Year</th>\n"
-    html += "<th style='padding: 10px;'>Publication</th>\n"
-    html += "<th style='padding: 10px;'>Issue_status</th>\n"
-    html += "</tr>\n" 
-    
-    if result:
-        for row in result:
-            html += "<tr style='background-color: #f2f2f2;'>\n"
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['SL.NO'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['A/c No'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Title'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Author'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Edition/Year'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Publication'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Issue_status'])
-            html += "</tr>\n"
-        html += "</table>"
-    else:
-        html += "<p>No results found.</p>"
-
-    return html
-
-    
-def use_database5(data):
-    import mysql.connector  # Ensure you have the mysql.connector import
-
-    result = None
-    try:
-        # Connect to the database
-        cnx = mysql.connector.connect(user='root', password='pwd', host='localhost', database='db_name')
-        mycursor = cnx.cursor(dictionary=True)
-
-        if 'ac_no' in data and data['ac_no']:
-            sql = "SELECT * FROM book WHERE `A/c No` = %s"
-            val = (data['ac_no'],)
-            mycursor.execute(sql, val)
-            result = mycursor.fetchall()
-
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")  # Print any database errors
-    finally:
-        # Close the cursor and connection
-        if mycursor:
-            mycursor.close()
-        if cnx:
-            cnx.close()
-
-    # Generate HTML
-    html = "<div style='margin-bottom: 100px;'></div>"
-    html += "<table style='border-collapse: collapse; width: 70%;'>\n" 
-    html += "<tr style='background-color: #333; color: white;'>\n" 
-    html += "<th style='padding: 10px;'>SL.NO</th>\n"
-    html += "<th style='padding: 10px;'>A/c No</th>\n" 
-    html += "<th style='padding: 10px;'>Title</th>\n" 
-    html += "<th style='padding: 10px;'>Author</th>\n"
-    html += "<th style='padding: 10px;'>Edition/Year</th>\n"
-    html += "<th style='padding: 10px;'>Publication</th>\n"
-    html += "<th style='padding: 10px;'>Issue_status</th>\n"
-    html += "</tr>\n" 
-    
-    if result:
-        for row in result:
-            html += "<tr style='background-color: #f2f2f2;'>\n"
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['SL.NO'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['A/c No'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Title'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Author'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Edition/Year'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Publication'])
-            html += "<td style='padding: 10px;'>{}</td>\n".format(row['Issue_status'])
-            html += "</tr>\n"
-        html += "</table>"
-    else:
-        html += "<p>No results found.</p>"
-
-    return html
+    return wrapper
 
 
+def get_dashboard_data():
+    stats = {
+        "total_books": 0,
+        "available_books": 0,
+        "issued_books": 0,
+        "due_tomorrow": 0,
+    }
+
+    with db_cursor(dictionary=True) as cursor:
+        cursor.execute(
+            """
+            SELECT
+                COUNT(*) AS total_books,
+                COALESCE(SUM(CASE
+                    WHEN LOWER(COALESCE(Issue_status, 'Available')) = 'available' THEN 1
+                    ELSE 0
+                END), 0) AS available_books,
+                COALESCE(SUM(CASE
+                    WHEN LOWER(COALESCE(Issue_status, 'Available')) = 'unavailable' THEN 1
+                    ELSE 0
+                END), 0) AS issued_books
+            FROM book
+            """
+        )
+        stats.update(cursor.fetchone() or {})
+
+        books_due = get_books_due_tomorrow(cursor)
+        stats["due_tomorrow"] = len(books_due)
+
+    return stats, books_due
 
 
+def get_books_due_tomorrow(cursor=None):
+    query = """
+        SELECT
+            COALESCE(i.Title, b.Title) AS Title,
+            i.Student_Name,
+            b.return_date
+        FROM issue i
+        LEFT JOIN book b ON i.AC_No = b.`A/c No`
+        WHERE DATE(b.return_date) = CURDATE() + INTERVAL 1 DAY
+        ORDER BY b.return_date ASC, Title ASC
+    """
+
+    if cursor:
+        cursor.execute(query)
+        return cursor.fetchall()
+
+    with db_cursor(dictionary=True) as owned_cursor:
+        owned_cursor.execute(query)
+        return owned_cursor.fetchall()
 
 
-@app.route('/')
+def add_book_record(form):
+    with db_cursor() as cursor:
+        cursor.execute(
+            """
+            INSERT INTO book
+                (`SL.NO`, `A/c No`, `Title`, `Author`, `Edition/Year`,
+                 `Publication`, `Issue_status`)
+            VALUES (%s, %s, %s, %s, %s, %s, 'Available')
+            """,
+            (
+                form["sl_no"].strip(),
+                form["ac_no"].strip(),
+                form["title"].strip(),
+                form["author"].strip(),
+                form["edition"].strip(),
+                form["publication"].strip(),
+            ),
+        )
+
+
+def delete_book_record(ac_no):
+    with db_cursor(dictionary=True) as cursor:
+        cursor.execute(
+            "SELECT `Issue_status` FROM book WHERE `A/c No` = %s",
+            (ac_no,),
+        )
+        book = cursor.fetchone()
+
+        if not book:
+            raise ValueError("No book was found for that accession number.")
+
+        if (book.get("Issue_status") or "Available").lower() == "unavailable":
+            raise ValueError("This book is currently issued and cannot be deleted.")
+
+        cursor.execute("DELETE FROM book WHERE `A/c No` = %s", (ac_no,))
+
+
+def issue_book_record(form):
+    ac_no = form["ac_no"].strip()
+    issue_date = datetime.now().date()
+    return_date = issue_date + timedelta(days=LOAN_DAYS)
+
+    with db_cursor(dictionary=True) as cursor:
+        cursor.execute(
+            """
+            SELECT `A/c No`, `Title`, `Author`, `Issue_status`
+            FROM book
+            WHERE `A/c No` = %s
+            """,
+            (ac_no,),
+        )
+        book = cursor.fetchone()
+
+        if not book:
+            raise ValueError("No book was found for that accession number.")
+
+        if (book.get("Issue_status") or "Available").lower() == "unavailable":
+            raise ValueError("This book is already issued.")
+
+        cursor.execute(
+            """
+            UPDATE book
+            SET Issue_status = 'Unavailable', return_date = %s
+            WHERE `A/c No` = %s
+            """,
+            (return_date, ac_no),
+        )
+        cursor.execute(
+            """
+            INSERT INTO issue
+                (`Student_Name`, `Reg_no`, `AC_No`, `Title`, `Author`, `Issue_Date`)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                form["sname"].strip(),
+                form["reg_no"].strip(),
+                ac_no,
+                book["Title"],
+                book["Author"],
+                issue_date,
+            ),
+        )
+
+    return return_date
+
+
+def return_book_record(ac_no):
+    today = datetime.now().date()
+
+    with db_cursor(dictionary=True) as cursor:
+        cursor.execute(
+            """
+            SELECT `Student_Name`, `Reg_no`, `AC_No`, `Title`, `Author`
+            FROM issue
+            WHERE `AC_No` = %s
+            """,
+            (ac_no,),
+        )
+        issue_record = cursor.fetchone()
+
+        if not issue_record:
+            raise ValueError("This book has not been issued.")
+
+        cursor.execute(
+            """
+            UPDATE book
+            SET Issue_status = 'Available', return_date = NULL
+            WHERE `A/c No` = %s
+            """,
+            (ac_no,),
+        )
+        cursor.execute(
+            """
+            INSERT INTO returnb
+                (`Student_Name`, `Reg_no`, `AC_No`, `Title`, `Author`, `Return_Date`)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                issue_record["Student_Name"],
+                issue_record["Reg_no"],
+                issue_record["AC_No"],
+                issue_record["Title"],
+                issue_record["Author"],
+                today,
+            ),
+        )
+        cursor.execute("DELETE FROM issue WHERE `AC_No` = %s", (ac_no,))
+
+
+def search_books(form):
+    conditions = []
+    values = []
+
+    search_fields = {
+        "ac_no": ("`A/c No` = %s", lambda value: value),
+        "sl_no": ("`SL.NO` = %s", lambda value: value),
+        "title": ("`Title` LIKE %s", lambda value: f"%{value}%"),
+        "author": ("`Author` LIKE %s", lambda value: f"%{value}%"),
+    }
+
+    for field_name, (condition, formatter) in search_fields.items():
+        value = form.get(field_name, "").strip()
+        if value:
+            conditions.append(condition)
+            values.append(formatter(value))
+
+    show_all = form.get("all_books") == "1"
+    if not conditions and not show_all:
+        return [], "Enter at least one search value or choose View all books."
+
+    where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    query = f"""
+        SELECT
+            `SL.NO` AS sl_no,
+            `A/c No` AS ac_no,
+            `Title` AS title,
+            `Author` AS author,
+            `Edition/Year` AS edition,
+            `Publication` AS publication,
+            `Issue_status` AS issue_status,
+            `return_date` AS return_date
+        FROM book
+        {where_clause}
+        ORDER BY `Title` ASC
+        LIMIT 100
+    """
+
+    with db_cursor(dictionary=True) as cursor:
+        cursor.execute(query, values)
+        return cursor.fetchall(), None
+
+
+@app.route("/")
 def login():
-    return render_template('login.html')
+    if session.get("is_admin"):
+        return redirect(url_for("home"))
+    return render_template("login.html")
 
-@app.route('/admin', methods=['POST'])
+
+@app.route("/admin", methods=["POST"])
 def admin_login():
-    username = request.form['username']
-    password = request.form['password']
-    
-    if username in admin_credentials and admin_credentials[username] == password:
-        return render_template('home.html')  # Redirect to admin page
-    else:
-        return render_template('login.html', message="Invalid username or password!")
-    
-@app.route('/user')
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        session["is_admin"] = True
+        flash("Welcome back. Dashboard is ready.", "success")
+        return redirect(url_for("home"))
+
+    return render_template("login.html", message="Invalid username or password.")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You have been logged out.", "info")
+    return redirect(url_for("login"))
+
+
+@app.route("/user")
 def user_page():
-    return redirect(url_for('show_user_page'))
-
-@app.route('/user_page')  # change it to reroite to search.html
-def show_user_page():
-    return render_template('search.html')
+    return redirect(url_for("search"))
 
 
-
-
-@app.route('/add')
-def add():
-    return render_template('add.html')
-
-@app.route('/add_book', methods=['POST']) 
-def add_book(): 
-    
-    
-    global data
-    data=request.form 
-
-    use_database()
-    ## Return the extracted information 
-    print ( "Add book")
-    return render_template('home.html')
-
-
-
-
-@app.route('/delete')
-def delete():
-    return render_template('delete.html')
-
-@app.route('/delete_book', methods=['POST']) 
-def delete_book(): 
-    ac_no = request.form.get('ac_no')
-    
-    if ac_no:
-	## Return the extracted information 
-        use_database1(ac_no,)
-	
-        print(f"Book name: {ac_no}")
-    return render_template('home.html')
-@app.route('/issue')
-def issue():
-    return render_template('issue.html')
-
-@app.route('/issue_book', methods=['POST']) 
-def issue_book(): 
-    ac_no = request.form.get('ac_no')  # Get account number from form
-    data = request.form  # Get the form data
-    
-    if ac_no:
-        try:
-            use_database2(ac_no, data)  # Call function to update database
-            flash("Book issued successfully.", "success")  # Flash success message
-        except Exception as e:
-            flash(f"An error occurred: {str(e)}", "error")  # Flash error message
-
-    return redirect(url_for('home'))
-
-
-
-
-
-@app.route('/returnb')
-def returnb():
-    return render_template('returnb.html')
-
-@app.route('/return_book', methods=['POST']) 
-def return_book(): 
-    
-   
-    global data
-    ac_no = request.form.get('ac_no')
-    data=request.form 
-    use_database3(ac_no)
-    ## Return the extracted information 
-    print ( "return book")
-    return render_template('home.html')
-
-
-@app.route('/')
+@app.route("/home")
+@admin_required
 def home():
-    books_due = check_return_date()  # This should return a list
-    messages = []
+    try:
+        stats, books_due = get_dashboard_data()
+    except Error as err:
+        stats, books_due = {}, []
+        flash(f"Database error: {err}", "error")
 
-    print("Books due from check_return_date:", books_due)  # Debugging output
+    return render_template("home.html", stats=stats, books_due=books_due)
 
-    if books_due:
-        for book in books_due:
-            messages.append(f"Reminder: The book '{book['Title']}' has not been returned by '{book['Student_Name']}' and is due tomorrow ({book['return_date']}).")
-    else:
-        messages.append("No books are due for return tomorrow.")
 
-    print("Messages before rendering:", messages)  # Debugging output
-    return render_template('home.html', messages=messages)  # Render the template
+@app.route("/add")
+@admin_required
+def add():
+    return render_template("add.html")
 
-@app.route('/check_books_due')
+
+@app.route("/add_book", methods=["POST"])
+@admin_required
+def add_book():
+    try:
+        add_book_record(request.form)
+        flash("Book added successfully.", "success")
+    except (Error, ValueError, KeyError) as err:
+        flash(f"Could not add book: {err}", "error")
+
+    return redirect(url_for("add"))
+
+
+@app.route("/delete")
+@admin_required
+def delete():
+    return render_template("delete.html")
+
+
+@app.route("/delete_book", methods=["POST"])
+@admin_required
+def delete_book():
+    ac_no = request.form.get("ac_no", "").strip()
+
+    if not ac_no:
+        flash("Accession number is required.", "warning")
+        return redirect(url_for("delete"))
+
+    try:
+        delete_book_record(ac_no)
+        flash("Book deleted successfully.", "success")
+    except (Error, ValueError) as err:
+        flash(f"Could not delete book: {err}", "error")
+
+    return redirect(url_for("delete"))
+
+
+@app.route("/issue")
+@admin_required
+def issue():
+    return render_template("issue.html", loan_days=LOAN_DAYS)
+
+
+@app.route("/issue_book", methods=["POST"])
+@admin_required
+def issue_book():
+    try:
+        return_date = issue_book_record(request.form)
+        flash(f"Book issued successfully. Due date: {return_date}.", "success")
+    except (Error, ValueError, KeyError) as err:
+        flash(f"Could not issue book: {err}", "error")
+
+    return redirect(url_for("issue"))
+
+
+@app.route("/returnb")
+@admin_required
+def returnb():
+    return render_template("returnb.html")
+
+
+@app.route("/return_book", methods=["POST"])
+@admin_required
+def return_book():
+    ac_no = request.form.get("ac_no", "").strip()
+
+    if not ac_no:
+        flash("Accession number is required.", "warning")
+        return redirect(url_for("returnb"))
+
+    try:
+        return_book_record(ac_no)
+        flash("Book returned successfully.", "success")
+    except (Error, ValueError) as err:
+        flash(f"Could not return book: {err}", "error")
+
+    return redirect(url_for("returnb"))
+
+
+@app.route("/search")
+def search():
+    return render_template("search.html", rows=[], searched=False)
+
+
+@app.route("/search_book", methods=["POST"])
+def search_book():
+    try:
+        rows, message = search_books(request.form)
+        if message:
+            flash(message, "warning")
+        elif not rows:
+            flash("No matching books found.", "info")
+    except Error as err:
+        rows = []
+        flash(f"Database error: {err}", "error")
+
+    return render_template("search.html", rows=rows, searched=True)
+
+
+@app.route("/check_books_due")
+@admin_required
 def check_books_due():
-    books_due = check_return_date()  # Your function to get due books
-    if not books_due:
-        return jsonify(books_due=[])
+    try:
+        books_due = get_books_due_tomorrow()
+    except Error:
+        books_due = []
 
     return jsonify(books_due=books_due)
 
 
-
-
-
-
-
-
-
-
-
-@app.route('/search')
-def search():
-    return render_template('search.html')
-
-@app.route('/search_book', methods=['POST'])
-def search_book():
-    global data
-    data = request.form  # Get the form data submitted by the user
-
-    # Determine which function to call based on the input fields
-    if 'ac_no' in data and data['ac_no']:  # Check if 'ac_no' exists and is not empty
-        table_html = use_database5(data)  # Call the function for valid account number
-    else:
-        table_html = use_database4(data)  # Call the alternative function
-
-    # Render search.html with the table_html content
-    return render_template('search.html', table=table_html)
-@app.route('/home')
-def s_home():
-    return render_template('home.html') 
-   
-
-
-
-
-
-if __name__ == '__main__': 
-
-    app.run(debug=True,host='0.0.0.0',port=8000)
-
-  
-
-
-
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=8000)

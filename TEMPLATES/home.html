@@ -1,159 +1,88 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        /* Your existing CSS styles here */
-        body {
-            background-image: url('/static/background.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+{% extends "base.html" %}
 
-        h1 {
-            color: #fcf3f3;
-            -webkit-text-stroke-width: 3px;
-            -webkit-text-stroke-color: black;
-            margin-top: 50px;
-            font-size: 3.5em;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-        }
+{% block title %}Dashboard | BookWise Library{% endblock %}
 
-        .message-container {
-            max-width: 800px;
-            padding: 20px;
-            background: #0066cc;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 10px;
-            margin-top: 30px;
-            color: white;
-            text-align: center;
-        }
-
-        /* Add styles for flash messages */
-        .flash-message {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        
-        .flash-message.success {
-            background-color: #28a745; /* Green for success */
-        }
-        
-        .flash-message.info {
-            background-color: #007bff; /* Blue for info */
-        }
-
-        nav {
-            margin-top: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            width: 100%;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        #nav_grid {
-            display: flex;
-            justify-content: center;
-            padding: 10px 0;
-        }
-
-        .nav_section {
-            display: flex;
-            gap: 15px;
-        }
-
-        .nav_section a {
-            color: white;
-            text-decoration: none;
-            font-size: 1.2em;
-            padding: 10px 20px;
-            transition: background 0.3s, color 0.3s;
-        }
-
-        .nav_section a:hover {
-            background: #0066cc;
-            color: white;
-            border-radius: 5px;
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 2em;
-            }
-            .nav_section a {
-                font-size: 1em;
-                padding: 8px 15px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <h1>BookWise: ISE Next-Gen Library Management</h1>
-
-    <nav id="nav_grid">
-        <section class="nav_section">
-            <a href="{{ url_for('add')}}" class="right">Add</a>
-            <a href="{{ url_for('delete')}}" class="right">Delete</a>
-            <a href="{{ url_for('issue')}}" class="right">Issue</a>
-            <a href="{{ url_for('returnb')}}" class="right">Return</a>
-            <a href="{{ url_for('search')}}" class="right">Search</a>
-        </section>
-    </nav>
-
-    <div class="message-container" id="message-container">
-        <!-- Messages about due books will be inserted here -->
-        {% if messages %}
-            {% for message in messages %}
-                <div class="flash-message success">{{ message }}</div>
-            {% endfor %}
-        {% else %}
-            <div class="flash-message info">No books are due for return tomorrow.</div>
-        {% endif %}
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="lede">Admin dashboard</p>
+        <h1>Library operations at a glance.</h1>
+        <p>
+            Manage your catalog, circulation, and return reminders from one
+            focused dashboard.
+        </p>
     </div>
+    <aside class="panel">
+        <h2>Due tomorrow</h2>
+        {% if books_due %}
+            <p class="lede">{{ books_due|length }} issued book{{ '' if books_due|length == 1 else 's' }} need follow-up.</p>
+        {% else %}
+            <p class="lede">No books are due for return tomorrow.</p>
+        {% endif %}
+    </aside>
+</section>
 
-    <!-- JavaScript to handle fetching books due for tomorrow -->
-    <script>
-        // Fetch data from the Flask route when the page loads
-       // Fetch data from the Flask route when the page loads
-window.onload = function() {
-    fetch('/check_books_due')
-        .then(response => response.json())  // Parse the response as JSON
-        .then(data => {
-            const messageContainer = document.getElementById('message-container');
-            // Clear any previous messages
-            messageContainer.innerHTML = '';
+<section class="stat-grid" aria-label="Library summary">
+    <article class="stat-card">
+        <span>Total books</span>
+        <strong>{{ stats.total_books|default(0) }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Available</span>
+        <strong>{{ stats.available_books|default(0) }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Issued</span>
+        <strong>{{ stats.issued_books|default(0) }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Due tomorrow</span>
+        <strong>{{ stats.due_tomorrow|default(0) }}</strong>
+    </article>
+</section>
 
-            // Handle the JSON data received from Flask
-            if (data.books_due.length > 0) {
-                // If there are books due, create messages and append to the container
-                data.books_due.forEach(book => {
-                    const message = document.createElement('div');
-                    message.className = 'flash-message success'; // You can change the class based on your needs
-                    message.textContent = `Reminder: The book '${book.Title}' has not been returned by '${book.Student_Name}'.`;
-                    messageContainer.appendChild(message);
-                });
-            } else {
-                const noDueBooksMessage = document.createElement('div');
-                noDueBooksMessage.className = 'flash-message info';
-                noDueBooksMessage.textContent = "No books are due for return tomorrow.";
-                messageContainer.appendChild(noDueBooksMessage);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching books due data:', error);
-        });
-};
+<section class="action-grid" aria-label="Quick actions">
+    <a class="action-card" href="{{ url_for('add') }}">
+        <strong>Add books</strong>
+        <span>Create new catalog entries with accession number, title, author, edition, and publication.</span>
+    </a>
+    <a class="action-card" href="{{ url_for('issue') }}">
+        <strong>Issue copies</strong>
+        <span>Assign a book to a borrower and automatically set its due date.</span>
+    </a>
+    <a class="action-card" href="{{ url_for('returnb') }}">
+        <strong>Record returns</strong>
+        <span>Close active issue records and make books available again.</span>
+    </a>
+    <a class="action-card" href="{{ url_for('search') }}">
+        <strong>Search catalog</strong>
+        <span>Find books by accession number, serial number, title, or author.</span>
+    </a>
+</section>
 
-    </script>
-</body>
-</html>
+<section class="table-card">
+    <h2>Return reminders</h2>
+    {% if books_due %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Borrower</th>
+                    <th>Return date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in books_due %}
+                    <tr>
+                        <td>{{ book.Title }}</td>
+                        <td>{{ book.Student_Name }}</td>
+                        <td>{{ book.return_date }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">No return reminders for tomorrow.</div>
+    {% endif %}
+</section>
+{% endblock %}
